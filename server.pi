@@ -1,0 +1,43 @@
+import pandas as pd
+from datetime import datetime
+def get_first_movement_average():
+
+    df = pd.read_excel("SUBJEKT 1 denní log.xlsx")
+
+    # Předpoklad: sloupec se jmenuje přesně takto
+    df["první pohyb dne"] = pd.to_datetime(df["první pohyb dne"], format="%H:%M")
+
+    # vezmeme posledních 7 dní
+    last_7 = df.tail(7)
+
+    # převedeme čas na minuty od půlnoci
+    minutes = last_7["první pohyb dne"].dt.hour * 60 + last_7["první pohyb dne"].dt.minute
+
+    average_minutes = minutes.mean()
+
+    return average_minutes
+
+@app.get("/status")
+def check_status():
+
+    avg_minutes = get_first_movement_average()
+
+    # dnešní hodnota
+    df = pd.read_excel("SUBJEKT 1 denní log.xlsx")
+    today = df.iloc[-1]
+    today_time = pd.to_datetime(today["první pohyb dne"], format="%H:%M")
+    today_minutes = today_time.hour * 60 + today_time.minute
+
+    # pokud je dnešek o víc než 60 minut později než průměr
+    if today_minutes > avg_minutes + 60:
+
+        send_email_alert(
+            "SENTINEL ALERT",
+            f"První pohyb je dnes výrazně později než průměr."
+        )
+
+        return {"status": "ALERT"}
+
+    return {"status": "OK"}
+
+
