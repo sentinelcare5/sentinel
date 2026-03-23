@@ -84,12 +84,13 @@ def get_token():
 # 📱 TELEGRAM
 # =====================
 
-def send_telegram(msg):
+def send_telegram_alert(message):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    requests.post(url, json={
+    data = {
         "chat_id": CHAT_ID,
-        "text": msg
-    })
+        "text": message
+    }
+    requests.post(url, data=data)
 
 
 # =====================
@@ -134,13 +135,11 @@ def monitor():
 
                     # 🚨 POHYB
                     if value in ["1", "true", "pir"] and mode == "AWAY":
-                        if last_alert != "triggered":
-                            last_alert = "triggered"
+                       print("🚨 ALERT SENT")
+                       send_telegram_alert("🚨 Pohyb detekován!")
 
                             current_time = time.strftime('%Y-%m-%d %H:%M:%S')
 
-                            msg = f"🚨 POHYB!\nČas: {now}"
-                            send_telegram(msg)
 
                             movements.append({
                                 "time": now,
