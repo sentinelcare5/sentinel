@@ -138,7 +138,7 @@ def monitor():
                        print("🚨 ALERT SENT")
                        send_telegram_alert("🚨 Pohyb detekován!")
 
-                            current_time = time.strftime('%Y-%m-%d %H:%M:%S')
+                        current_time = time.strftime('%Y-%m-%d %H:%M:%S')
 
 
                             movements.append({
