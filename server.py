@@ -97,60 +97,44 @@ def send_telegram_alert(message):
 # 🔥 MONITOR
 # =====================
 
+import time
+
 def monitor():
-    global last_alert, mode, movements
+    global last_alert
 
     while True:
         try:
             token = get_token()
-            if not token:
-                time.sleep(5)
-                continue
+            data = get_device_status(token)
 
-            path = f"/v1.0/devices/{DEVICE_ID}/status"
-            t = int(time.time() * 1000)
+            for item in data:
+                code = item.get("code")
+                value = item.get("value")
 
-            sign = generate_sign(t, "GET", path, token)
+                print(item)
 
-            headers = {
-                "client_id": ACCESS_ID,
-                "access_token": token,
-                "sign": sign,
-                "t": str(t),
-                "sign_method": "HMAC-SHA256"
-            }
+                # 🚨 POHYB
+                if code == "pir":
 
-            res = requests.get(BASE_URL + path, headers=headers)
-            data = res.json()
-
-            if not data.get("success"):
-                print("DEVICE ERROR:", data)
-                time.sleep(5)
-                continue
-
-            for item in data.get("result", []):
-                if item.get("code") in ["pir", "pir_state"]:
-                    value = str(item.get("value")).lower()
                     print("PIR:", value)
 
-# 🚨 POHYB
-if value in ["1", "true", "pir"] and mode == "AWAY":
-    print("🚨 ALERT SENT")
-    send_telegram_alert("🚨 Pohyb detekován!")
+                    if value in ["1", "true", "pir"] and mode == "AWAY":
+                        print("🚨 ALERT SENT")
+                        send_telegram_alert("🚨 Pohyb detekován!")
 
-    current_time = time.strftime('%Y-%m-%d %H:%M:%S')
+                        current_time = time.strftime('%Y-%m-%d %H:%M:%S')
 
-    movements.append({
-        "time": current_time,
-        "type": "motion"
-    })
+                        movements.append({
+                            "time": current_time,
+                            "type": "motion"
+                        })
 
-    save_movements()
+                        save_movements()
 
-    print("🚨 ALERT")
+                        print("🚨 ALERT")
 
-elif value == "none":
-    last_alert = None
+                    elif value == "none":
+                        last_alert = None
 
         except Exception as e:
             print("Monitor error:", e)
