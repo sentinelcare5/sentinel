@@ -133,25 +133,24 @@ def monitor():
                     value = str(item.get("value")).lower()
                     print("PIR:", value)
 
-                    # 🚨 POHYB
-                    if value in ["1", "true", "pir"] and mode == "AWAY":
-                       print("🚨 ALERT SENT")
-                       send_telegram_alert("🚨 Pohyb detekován!")
+# 🚨 POHYB
+if value in ["1", "true", "pir"] and mode == "AWAY":
+    print("🚨 ALERT SENT")
+    send_telegram_alert("🚨 Pohyb detekován!")
 
-                        current_time = time.strftime('%Y-%m-%d %H:%M:%S')
+    current_time = time.strftime('%Y-%m-%d %H:%M:%S')
 
+    movements.append({
+        "time": current_time,
+        "type": "motion"
+    })
 
-                            movements.append({
-                                "time": now,
-                                "type": "motion"
-                            })
-                           
-                            save_movements()
+    save_movements()
 
-                            print("🚨 ALERT")
+    print("🚨 ALERT")
 
-                    elif value == "none":
-                        last_alert = None
+elif value == "none":
+    last_alert = None
 
         except Exception as e:
             print("Monitor error:", e)
