@@ -81,6 +81,12 @@ def monitor():
             response = requests.get(url, headers=headers)
             data = response.json()
 
+            if "result" not in data:
+                print("❌ TUYA ERROR:", data)
+                return
+
+            status = data["result"]
+
             print("RAW DATA:", data)
 
             # 🔥 OPRAVA – kontrola result
