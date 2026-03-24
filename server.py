@@ -68,48 +68,63 @@ def monitor():
 
     while True:
         try:
-            token = get_token()
-            print("TOKEN OK")
+            url = f"https://openapi.tuyaeu.com/v1.0/devices/{DEVICE_ID}/status"
 
-            data = get_device_status(token)
+            headers = {
+                "client_id": CLIENT_ID,
+                "access_token": ACCESS_TOKEN,
+                "sign": SIGN,
+                "t": str(int(time.time() * 1000)),
+                "sign_method": "HMAC-SHA256"
+            }
 
-            for item in data:
+            response = requests.get(url, headers=headers)
+            data = response.json()
+
+            print("RAW DATA:", data)
+
+            # 🔥 OPRAVA – kontrola result
+            if not data.get("success") or "result" not in data:
+                print("❌ Tuya chyba:", data)
+                time.sleep(5)
+                continue
+
+            for item in data["result"]:
                 code = item.get("code")
                 value = item.get("value")
 
-                print(item)
+                print(f"{code}: {value}")
 
-                # 🚨 PIR DETEKCE
+                # 🚨 DETEKCE POHYBU
                 if code == "pir":
 
-                    print("PIR:", value)
+                    if value in ["pir", "true", "1"] and mode == "AWAY":
 
-                    if value in ["1", "true", "pir"] and mode == "AWAY":
+                        now = time.strftime('%Y-%m-%d %H:%M:%S')
 
-                        # anti-spam (1 alert za 30s)
+                        # 🔥 zabrání spamu (jen jednou za 30s)
                         if last_alert is None or time.time() - last_alert > 30:
-
                             print("🚨 ALERT SENT")
-                            send_telegram_alert("🚨 Pohyb detekován!")
-
-                            current_time = time.strftime('%Y-%m-%d %H:%M:%S')
 
                             movements.append({
-                                "time": current_time,
+                                "time": now,
                                 "type": "motion"
                             })
 
                             save_movements()
 
+                            send_telegram_alert("🚨 Pohyb detekován!")
+
                             last_alert = time.time()
 
                     elif value == "none":
-                        pass
+                        last_alert = None
+
+            time.sleep(5)
 
         except Exception as e:
             print("Monitor error:", e)
-
-        time.sleep(5)
+            time.sleep(5)
 
 # ====== START MONITOR THREAD ======
 threading.Thread(target=monitor, daemon=True).start()
