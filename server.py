@@ -4,13 +4,14 @@ import requests
 import time
 import threading
 import json
+import os
 
 app = FastAPI()
 
 # ====== TUYA CONFIG ======
-ACCESS_ID = "k95a3783r5teaydsgkdf"
-ACCESS_KEY = "761363a195fc4d258a055895b8a10b5a"
-DEVICE_ID = "bfd9be3339d266be8fzsva"
+ACCESS_ID = os.getenv"k95a3783r5teaydsgkdf"
+ACCESS_KEY = os.getenv"761363a195fc4d258a055895b8a10b5a"
+DEVICE_ID = os.getenv"bfd9be3339d266be8fzsva"
 BASE_URL = "https://openapi.tuyaeu.com"
 
 # ====== TELEGRAM ======
