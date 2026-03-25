@@ -1,3 +1,6 @@
+print("ACCESS_ID:", ACCESS_ID)
+print("ACCESS_KEY:", ACCESS_KEY)
+print("DEVICE_ID:", DEVICE_ID)
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 import requests
