@@ -98,7 +98,12 @@ def get_status():
         return None
 
     timestamp = str(int(time.time() * 1000))
-    sign_str = ACCESS_ID + token + timestamp
+
+    method = "GET"
+    url_path = f"/v1.0/devices/{DEVICE_ID}/status"
+
+    sign_str = ACCESS_ID + token + timestamp + method + "\n" + url_path
+
     sign = hmac.new(
         ACCESS_KEY.encode(),
         sign_str.encode(),
@@ -113,13 +118,14 @@ def get_status():
         "sign_method": "HMAC-SHA256"
     }
 
-    url = f"{BASE_URL}/v1.0/devices/{DEVICE_ID}/status"
+    url = f"{BASE_URL}{url_path}"
 
     try:
         res = requests.get(url, headers=headers).json()
+        print("STATUS DEBUG:", res)
         return res.get("result", [])
-    except:
-        print("STATUS ERROR")
+    except Exception as e:
+        print("STATUS ERROR:", e)
         return None
 
 # ====== MONITOR ======
