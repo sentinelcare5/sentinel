@@ -14,7 +14,7 @@ app = FastAPI()
 ACCESS_ID = "k95a3783r5teaydsgkdf"
 ACCESS_KEY = "761363a195fc4d258a055895b8a10b5a"
 DEVICE_ID = "bfd9be3339d266be8fzsva"
-BASE_URL = "https://openapi.tuyaeu.com"
+BASE_URL = "https://openapi.tuyaus.com"
 
 print("ACCESS_ID:", ACCESS_ID)
 print("ACCESS_KEY:", ACCESS_KEY)
