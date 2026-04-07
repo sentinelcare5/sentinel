@@ -64,10 +64,14 @@ def send_telegram_alert(message):
 def get_token():
     timestamp = str(int(time.time() * 1000))
 
-    message = ACCESS_ID + timestamp
+    method = "GET"
+    url_path = "/v1.0/token?grant_type=1"
+
+    sign_str = ACCESS_ID + timestamp + method + "\n" + url_path
+
     sign = hmac.new(
-        ACCESS_KEY.encode("utf-8"),
-        message.encode("utf-8"),
+        ACCESS_KEY.encode(),
+        sign_str.encode(),
         hashlib.sha256
     ).hexdigest().upper()
 
@@ -78,17 +82,20 @@ def get_token():
         "sign_method": "HMAC-SHA256"
     }
 
-    url = f"{BASE_URL}/v1.0/token?grant_type=1"
+    url = f"{BASE_URL}{url_path}"
 
-    response = requests.get(url, headers=headers)
-    data = response.json()
+    try:
+        res = requests.get(url, headers=headers).json()
+        print("TOKEN DEBUG:", res)
 
-    print("TOKEN DEBUG:", data)
+        if res.get("success"):
+            return res["result"]["access_token"]
+        else:
+            print("TOKEN ERROR:", res)
+            return None
 
-    if data.get("success"):
-        return data["result"]["access_token"]
-    else:
-        print("TOKEN ERROR:", data)
+    except Exception as e:
+        print("TOKEN EXCEPTION:", e)
         return None
 
 # ====== TUYA STATUS ======
