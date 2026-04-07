@@ -16,6 +16,10 @@ ACCESS_KEY = os.getenv("761363a195fc4d258a055895b8a10b5a")
 DEVICE_ID = os.getenv("bfd9be3339d266be8fzsva")
 BASE_URL = "https://openapi.tuyaeu.com"
 
+print("ACCESS_ID:", ACCESS_ID)
+print("ACCESS_KEY:", ACCESS_KEY)
+print("DEVICE_ID:", DEVICE_ID)
+
 # ====== TELEGRAM ======
 TELEGRAM_TOKEN = os.getenv("8744898246:AAGClWc9KqAc7xDZhVePZhnanqvalt9Y_ps")
 CHAT_ID = os.getenv("7885300813")
