@@ -11,9 +11,9 @@ import hmac
 app = FastAPI()
 
 # ====== TUYA CONFIG ======
-ACCESS_ID = os.getenv("ACCESS_ID")
-ACCESS_KEY = os.getenv("ACCESS_KEY")
-DEVICE_ID = os.getenv("DEVICE_ID")
+ACCESS_ID = os.getenv("k95a3783r5teaydsgkdf")
+ACCESS_KEY = os.getenv("761363a195fc4d258a055895b8a10b5a")
+DEVICE_ID = os.getenv("bfd9be3339d266be8fzsva")
 BASE_URL = "https://openapi.tuyaeu.com"
 
 # ====== TELEGRAM ======
@@ -58,31 +58,34 @@ def send_telegram_alert(message):
 
 # ====== TUYA TOKEN ======
 def get_token():
-    t = str(int(time.time() * 1000))
-    sign_str = ACCESS_ID + t
+    timestamp = str(int(time.time() * 1000))
+
+    message = ACCESS_ID + timestamp
     sign = hmac.new(
-        ACCESS_KEY.encode(),
-        sign_str.encode(),
+        ACCESS_KEY.encode("utf-8"),
+        message.encode("utf-8"),
         hashlib.sha256
     ).hexdigest().upper()
 
     headers = {
         "client_id": ACCESS_ID,
         "sign": sign,
-        "t": t,
+        "t": timestamp,
         "sign_method": "HMAC-SHA256"
     }
 
-    url = BASE_URL + "/v1.0/token?grant_type=1"
-    res = requests.get(url, headers=headers).json()
+    url = f"{BASE_URL}/v1.0/token?grant_type=1"
 
-    print("TOKEN DEBUG:", res)
+    response = requests.get(url, headers=headers)
+    data = response.json()
 
-    if not res.get("success"):
-        print("TOKEN ERROR:", res)
+    print("TOKEN DEBUG:", data)
+
+    if data.get("success"):
+        return data["result"]["access_token"]
+    else:
+        print("TOKEN ERROR:", data)
         return None
-
-    return res["result"]["access_token"]
 
 # ====== TUYA STATUS ======
 def get_status():
