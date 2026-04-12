@@ -11,18 +11,19 @@ import hmac
 app = FastAPI()
 
 # ====== TUYA CONFIG ======
-ACCESS_ID = "k95a3783r5teaydsgkdf"
-ACCESS_KEY = "761363a195fc4d258a055895b8a10b5a"
-DEVICE_ID = "bfd9be3339d266be8fzsva"
-BASE_URL = "https://openapi.tuyaus.com"
+ACCESS_ID = os.getenv("k95a3783r5teaydsgkdf")
+ACCESS_KEY = os.getenv("761363a195fc4d258a055895b8a10b5a")
+DEVICE_ID = os.getenv("bfd9be3339d266be8fzsva")
+
+BASE_URL = "https://openapi.tuyaeu.com"
 
 print("ACCESS_ID:", ACCESS_ID)
 print("ACCESS_KEY:", ACCESS_KEY)
 print("DEVICE_ID:", DEVICE_ID)
 
 # ====== TELEGRAM ======
-TELEGRAM_TOKEN = os.getenv("8744898246:AAGClWc9KqAc7xDZhVePZhnanqvalt9Y_ps")
-CHAT_ID = os.getenv("7885300813")
+TELEGRAM_TOKEN = "8744898246:AAGClWc9KqAc7xDZhVePZhnanqvalt9Y_ps"
+CHAT_ID = "7885300813"
 
 # ====== DATA ======
 mode = "HOME"
@@ -45,15 +46,11 @@ def load_movements():
 load_movements()
 
 # ====== TELEGRAM ======
-def send_telegram_alert(message):
-    if not TELEGRAM_TOKEN or not CHAT_ID:
-        print("Telegram není nastaven")
-        return
-
+def send_telegram_alert(text):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     data = {
         "chat_id": CHAT_ID,
-        "text": message
+        "text": text
     }
     try:
         requests.post(url, data=data)
@@ -61,21 +58,18 @@ def send_telegram_alert(message):
         print("Telegram error")
 
 # ====== TUYA TOKEN ======
-import hashlib
-import hmac
-
 def get_token():
     timestamp = str(int(time.time() * 1000))
     
     method = "GET"
     url_path = "/v1.0/token?grant_type=1"
+    body = ""
 
-    # 🔥 TADY JE KLÍČ
-    sign_str = ACCESS_ID + timestamp
+    sign_str = method + "\n" + hashlib.sha256(body.encode()).hexdigest() + "\n\n" + url_path
 
     sign = hmac.new(
         ACCESS_KEY.encode(),
-        sign_str.encode(),
+        (ACCESS_ID + timestamp + sign_str).encode(),
         hashlib.sha256
     ).hexdigest().upper()
 
@@ -103,15 +97,15 @@ def get_status():
         return None
 
     timestamp = str(int(time.time() * 1000))
-
     method = "GET"
     url_path = f"/v1.0/devices/{DEVICE_ID}/status"
+    body = ""
 
-    sign_str = ACCESS_ID + token + timestamp + method + "\n" + url_path
+    sign_str = method + "\n" + hashlib.sha256(body.encode()).hexdigest() + "\n\n" + url_path
 
     sign = hmac.new(
         ACCESS_KEY.encode(),
-        sign_str.encode(),
+        (ACCESS_ID + token + timestamp + sign_str).encode(),
         hashlib.sha256
     ).hexdigest().upper()
 
@@ -127,10 +121,9 @@ def get_status():
 
     try:
         res = requests.get(url, headers=headers).json()
-        print("STATUS DEBUG:", res)
         return res.get("result", [])
-    except Exception as e:
-        print("STATUS ERROR:", e)
+    except:
+        print("STATUS ERROR")
         return None
 
 # ====== MONITOR ======
@@ -143,19 +136,14 @@ def monitor():
 
             if status:
                 for item in status:
-                    code = item.get("code")
-                    value = item.get("value")
+                    if item["code"] == "pir":
+                        value = str(item["value"]).lower()
 
-                    if code == "pir":
-                        print("PIR:", value)
-
-                        # 🚨 POHYB
-                        if value in ["1", "true", "pir"] and mode == "AWAY":
+                        if value in ["1", "true"] and mode == "AWAY":
                             now = time.strftime('%Y-%m-%d %H:%M:%S')
 
                             if last_alert != now:
-                                print("🚨 ALERT SENT")
-                                send_telegram_alert("🚨 Pohyb detekován!")
+                                print("🚨 POHYB DETEKOVÁN")
 
                                 movements.append({
                                     "time": now,
@@ -163,6 +151,9 @@ def monitor():
                                 })
 
                                 save_movements()
+
+                                send_telegram_alert("🚨 Pohyb detekován!")
+
                                 last_alert = now
 
                         elif value == "none":
@@ -173,10 +164,36 @@ def monitor():
 
         time.sleep(5)
 
-# ====== START MONITOR THREAD ======
+# ====== START THREAD ======
 threading.Thread(target=monitor, daemon=True).start()
 
 # ====== API ======
+@app.get("/", response_class=HTMLResponse)
+def home():
+    return """
+    <h1>Alarm systém</h1>
+    <button onclick="fetch('/set_mode/AWAY', {method:'POST'})">Zapnout</button>
+    <button onclick="fetch('/set_mode/HOME', {method:'POST'})">Vypnout</button>
+    <h2>Pohyby:</h2>
+    <ul id="list"></ul>
+
+    <script>
+    async function load(){
+        let res = await fetch('/movements')
+        let data = await res.json()
+        let list = document.getElementById("list")
+        list.innerHTML = ""
+        data.forEach(m => {
+            let li = document.createElement("li")
+            li.innerText = m.time + " - " + m.type
+            list.appendChild(li)
+        })
+    }
+    setInterval(load, 2000)
+    load()
+    </script>
+    """
+
 @app.get("/movements")
 def get_movements():
     return movements
@@ -186,46 +203,3 @@ def set_mode(new_mode: str):
     global mode
     mode = new_mode
     return {"mode": mode}
-
-# ====== WEB UI ======
-@app.get("/", response_class=HTMLResponse)
-def home():
-    return """
-    <html>
-    <head>
-        <title>Sentinel</title>
-    </head>
-    <body>
-        <h1>Sentinel Security</h1>
-
-        <button onclick="setMode('HOME')">HOME</button>
-        <button onclick="setMode('AWAY')">AWAY</button>
-
-        <h2>Pohyby:</h2>
-        <ul id="list"></ul>
-
-        <script>
-        async function load() {
-            let res = await fetch('/movements')
-            let data = await res.json()
-
-            let list = document.getElementById("list")
-            list.innerHTML = ""
-
-            data.reverse().forEach(item => {
-                let li = document.createElement("li")
-                li.innerText = item.time + " - " + item.type
-                list.appendChild(li)
-            })
-        }
-
-        async function setMode(mode) {
-            await fetch('/set_mode/' + mode, {method: 'POST'})
-        }
-
-        setInterval(load, 3000)
-        load()
-        </script>
-    </body>
-    </html>
-    """
