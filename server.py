@@ -94,6 +94,7 @@ def get_token():
 def get_status():
     token = get_token()
     if not token:
+        print("❌ Není token")
         return None
 
     timestamp = str(int(time.time() * 1000))
@@ -101,6 +102,7 @@ def get_status():
     url_path = f"/v1.0/devices/{DEVICE_ID}/status"
     body = ""
 
+    # 🔐 správný sign string (Tuya v2)
     sign_str = method + "\n" + hashlib.sha256(body.encode()).hexdigest() + "\n\n" + url_path
 
     sign = hmac.new(
@@ -121,9 +123,13 @@ def get_status():
 
     try:
         res = requests.get(url, headers=headers).json()
+
+        # 🔍 DEBUG (DŮLEŽITÉ)
+        print("STATUS RESPONSE:", res)
+
         return res.get("result", [])
-    except:
-        print("STATUS ERROR")
+    except Exception as e:
+        print("STATUS ERROR:", e)
         return None
 
 # ====== MONITOR ======
@@ -136,7 +142,7 @@ def monitor():
 
             if status:
                 for item in status:
-                    if item["code"] == "pir":
+                    if item["code"] in ["pir", "motion_state", "presence_state"]:
                         value = str(item["value"]).lower()
 
                         if value in ["1", "true"] and mode == "AWAY":
