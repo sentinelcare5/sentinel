@@ -136,25 +136,15 @@ def get_status():
 
 # ====== MONITOR ======
 def monitor():
-    global last_alert
-
     while True:
         status = get_status()
-
+        
         if status:
             for item in status:
-                if item["code"] == "pir":
-                    
-                    if item["value"] == "pir":
-                        
-                        if last_alert != "pir":
-                            print("POHYB DETEKOVÁN")
-                            send_telegram("🚨 POHYB DETEKOVÁN!")
-                            last_alert = "pir"
-
-                    else:
-                        last_alert = "none"
-
+                if item["code"] == "pir" and item["value"] == "pir":
+                    print("POHYB DETEKOVÁN")
+                    send_telegram("🚨 POHYB DETEKOVÁN!")
+        
         time.sleep(5)
 
 # ====== START THREAD ======
