@@ -11,8 +11,8 @@ import hmac
 app = FastAPI()
 
 # ====== TUYA CONFIG ======
-ACCESS_ID = ("k95a3783r5teaydsgkdf")
-ACCESS_KEY = ("761363a195fc4d258a055895b8a10b5a")
+ACCESS_ID = ("7pevmfxdk4scr8fktm73")
+ACCESS_KEY = ("96134c27114a48c5b919ff14b849470e")
 DEVICE_ID = ("bfd9be3339d266be8fzsva")
 
 BASE_URL = "https://openapi.tuyaeu.com"
