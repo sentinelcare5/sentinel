@@ -25,6 +25,8 @@ print("DEVICE_ID:", DEVICE_ID)
 TELEGRAM_TOKEN = "8744898246:AAGClWc9KqAc7xDZhVePZhnanqvalt9Y_ps"
 CHAT_ID = "7885300813"
 
+send_telegram("TEST ZPRÁVA")
+
 # ====== DATA ======
 mode = "HOME"
 movements = []
@@ -46,16 +48,18 @@ def load_movements():
 load_movements()
 
 # ====== TELEGRAM ======
-def send_telegram_alert(text):
+def send_telegram(message):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    
     data = {
         "chat_id": CHAT_ID,
-        "text": text
+        "text": message
     }
+
     try:
         requests.post(url, data=data)
     except:
-        print("Telegram error")
+        print("TELEGRAM ERROR")
 
 # ====== TUYA TOKEN ======
 def get_token():
@@ -137,36 +141,21 @@ def monitor():
     global last_alert
 
     while True:
-        try:
-            status = get_status()
+        status = get_status()
 
-            if status:
-                for item in status:
-                    if item["code"] in ["pir", "motion_state", "presence_state"]:
-                        value = str(item["value"]).lower()
+        if status:
+            for item in status:
+                if item["code"] == "pir":
+                    
+                    if item["value"] == "pir":
+                        
+                        if last_alert != "pir":
+                            print("POHYB DETEKOVÁN")
+                            send_telegram("🚨 POHYB DETEKOVÁN!")
+                            last_alert = "pir"
 
-                        if value in ["1", "true"] and mode == "AWAY":
-                            now = time.strftime('%Y-%m-%d %H:%M:%S')
-
-                            if last_alert != now:
-                                print("🚨 POHYB DETEKOVÁN")
-
-                                movements.append({
-                                    "time": now,
-                                    "type": "motion"
-                                })
-
-                                save_movements()
-
-                                send_telegram_alert("🚨 Pohyb detekován!")
-
-                                last_alert = now
-
-                        elif value == "none":
-                            last_alert = None
-
-        except Exception as e:
-            print("Monitor error:", e)
+                    else:
+                        last_alert = "none"
 
         time.sleep(5)
 
