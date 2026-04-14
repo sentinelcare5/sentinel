@@ -160,6 +160,9 @@ def monitor():
 # ====== START THREAD ======
 threading.Thread(target=monitor, daemon=True).start()
 
+# TEST TELEGRAM
+send_telegram("TEST ZPRÁVA")
+
 # ====== API ======
 @app.get("/", response_class=HTMLResponse)
 def home():
