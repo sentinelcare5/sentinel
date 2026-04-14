@@ -1,77 +1,48 @@
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
-import requests
 import time
-import threading
-import json
-import os
-import hashlib
 import hmac
+import hashlib
+import requests
+import threading
+import os
+
+from fastapi import FastAPI
+
+# ====== CONFIG ======
+ACCESS_ID = os.getenv("7pevmfxdk4scr8fktm73")
+ACCESS_KEY = os.getenv("96134c27114a48c5b919ff14b849470e")
+DEVICE_ID = os.getenv("bfd9be3339d266be8fzsva")
+
+BASE_URL = "https://openapi.tuyaeu.com"  # případně us = https://openapi.tuyaus.com
+
+TELEGRAM_TOKEN = os.getenv("8744898246:AAGClWc9KqAc7xDZhVePZhnanqvalt9Y_ps")
+CHAT_ID = os.getenv("7885300813")
+
+MODE = "AWAY"  # HOME / AWAY
+last_alert = 0
 
 app = FastAPI()
 
-# ====== TUYA CONFIG ======
-ACCESS_ID = ("7pevmfxdk4scr8fktm73")
-ACCESS_KEY = ("96134c27114a48c5b919ff14b849470e")
-DEVICE_ID = ("bfd9be3339d266be8fzsva")
-
-BASE_URL = "https://openapi.tuyaeu.com"
-
-print("ACCESS_ID:", ACCESS_ID)
-print("ACCESS_KEY:", ACCESS_KEY)
-print("DEVICE_ID:", DEVICE_ID)
-
 # ====== TELEGRAM ======
-TELEGRAM_TOKEN = "8744898246:AAGClWc9KqAc7xDZhVePZhnanqvalt9Y_ps"
-CHAT_ID = "7885300813"
-
-# ====== DATA ======
-mode = "HOME"
-movements = []
-last_alert = None
-
-# ====== SAVE / LOAD ======
-def save_movements():
-    with open("movements.json", "w") as f:
-        json.dump(movements, f)
-
-def load_movements():
-    global movements
+def send_telegram(text):
     try:
-        with open("movements.json", "r") as f:
-            movements = json.load(f)
-    except:
-        movements = []
-
-load_movements()
-
-# ====== TELEGRAM ======
-def send_telegram(message):
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    
-    data = {
-        "chat_id": CHAT_ID,
-        "text": message
-    }
-
-    try:
+        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+        data = {
+            "chat_id": CHAT_ID,
+            "text": text
+        }
         requests.post(url, data=data)
     except:
         print("TELEGRAM ERROR")
 
+
 # ====== TUYA TOKEN ======
 def get_token():
     timestamp = str(int(time.time() * 1000))
-    
-    method = "GET"
-    url_path = "/v1.0/token?grant_type=1"
-    body = ""
-
-    sign_str = method + "\n" + hashlib.sha256(body.encode()).hexdigest() + "\n\n" + url_path
+    sign_str = ACCESS_ID + timestamp
 
     sign = hmac.new(
         ACCESS_KEY.encode(),
-        (ACCESS_ID + timestamp + sign_str).encode(),
+        sign_str.encode(),
         hashlib.sha256
     ).hexdigest().upper()
 
@@ -82,34 +53,33 @@ def get_token():
         "sign_method": "HMAC-SHA256"
     }
 
-    url = f"{BASE_URL}{url_path}"
+    url = f"{BASE_URL}/v1.0/token?grant_type=1"
 
-    res = requests.get(url, headers=headers).json()
-    print("TOKEN DEBUG:", res)
+    try:
+        res = requests.get(url, headers=headers).json()
+        print("TOKEN DEBUG:", res)
 
-    if res.get("success"):
-        return res["result"]["access_token"]
-    else:
+        if res.get("success"):
+            return res["result"]["access_token"]
+        else:
+            return None
+    except:
+        print("TOKEN ERROR")
         return None
+
 
 # ====== TUYA STATUS ======
 def get_status():
     token = get_token()
     if not token:
-        print("❌ Není token")
         return None
 
     timestamp = str(int(time.time() * 1000))
-    method = "GET"
-    url_path = f"/v1.0/devices/{DEVICE_ID}/status"
-    body = ""
-
-    # 🔐 správný sign string (Tuya v2)
-    sign_str = method + "\n" + hashlib.sha256(body.encode()).hexdigest() + "\n\n" + url_path
+    sign_str = ACCESS_ID + token + timestamp
 
     sign = hmac.new(
         ACCESS_KEY.encode(),
-        (ACCESS_ID + token + timestamp + sign_str).encode(),
+        sign_str.encode(),
         hashlib.sha256
     ).hexdigest().upper()
 
@@ -121,76 +91,67 @@ def get_status():
         "sign_method": "HMAC-SHA256"
     }
 
-    url = f"{BASE_URL}{url_path}"
+    url = f"{BASE_URL}/v1.0/devices/{DEVICE_ID}/status"
 
     try:
         res = requests.get(url, headers=headers).json()
-
-        # 🔍 DEBUG (DŮLEŽITÉ)
         print("STATUS RESPONSE:", res)
-
         return res.get("result", [])
-    except Exception as e:
-        print("STATUS ERROR:", e)
+    except:
+        print("STATUS ERROR")
         return None
 
-# ====== MONITOR ======
-last_alert = 0
 
+# ====== MONITOR ======
 def monitor():
     global last_alert
-    
+
     while True:
-        status = get_status()
-        
-        if status:
-            for item in status:
-                if item["code"] == "pir" and item["value"] == "pir":
-                    if time.time() - last_alert > 30:
-                        send_telegram("🚨 POHYB DETEKOVÁN!")
-                        last_alert = time.time()
-        
-        time.sleep(5)
+        try:
+            status = get_status()
 
-# ====== START THREAD ======
-threading.Thread(target=monitor, daemon=True).start()
+            if status:
+                for item in status:
+                    if item["code"] == "pir":
+                        print("PIR:", item["value"])
 
-# TEST TELEGRAM
-send_telegram("TEST ZPRÁVA")
+                        if MODE == "AWAY" and item["value"] == "pir":
+                            if time.time() - last_alert > 30:
+                                print("🚨 POHYB DETEKOVÁN")
+                                send_telegram("🚨 POHYB DETEKOVÁN!")
+                                last_alert = time.time()
+
+            time.sleep(5)
+
+        except Exception as e:
+            print("Monitor error:", e)
+            time.sleep(5)
+
 
 # ====== API ======
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 def home():
-    return """
-    <h1>Alarm systém</h1>
-    <button onclick="fetch('/set_mode/AWAY', {method:'POST'})">Zapnout</button>
-    <button onclick="fetch('/set_mode/HOME', {method:'POST'})">Vypnout</button>
-    <h2>Pohyby:</h2>
-    <ul id="list"></ul>
+    return {"status": "running", "mode": MODE}
 
-    <script>
-    async function load(){
-        let res = await fetch('/movements')
-        let data = await res.json()
-        let list = document.getElementById("list")
-        list.innerHTML = ""
-        data.forEach(m => {
-            let li = document.createElement("li")
-            li.innerText = m.time + " - " + m.type
-            list.appendChild(li)
-        })
-    }
-    setInterval(load, 2000)
-    load()
-    </script>
-    """
 
-@app.get("/movements")
-def get_movements():
-    return movements
+@app.get("/set_mode/{mode}")
+def set_mode(mode: str):
+    global MODE
+    MODE = mode.upper()
+    return {"mode": MODE}
 
-@app.post("/set_mode/{new_mode}")
-def set_mode(new_mode: str):
-    global mode
-    mode = new_mode
-    return {"mode": mode}
+
+@app.get("/test")
+def test():
+    send_telegram("✅ TEST FUNGUJE")
+    return {"ok": True}
+
+
+# ====== START ======
+def start_monitor():
+    thread = threading.Thread(target=monitor)
+    thread.daemon = True
+    thread.start()
+
+
+start_monitor()
