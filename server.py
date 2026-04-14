@@ -38,6 +38,7 @@ def send_telegram(text):
 # ====== TUYA TOKEN ======
 def get_token():
     timestamp = str(int(time.time() * 1000))
+
     sign_str = ACCESS_ID + timestamp
 
     sign = hmac.new(
@@ -55,18 +56,13 @@ def get_token():
 
     url = f"{BASE_URL}/v1.0/token?grant_type=1"
 
-    try:
-        res = requests.get(url, headers=headers).json()
-        print("TOKEN DEBUG:", res)
+    res = requests.get(url, headers=headers).json()
+    print("TOKEN DEBUG:", res)
 
-        if res.get("success"):
-            return res["result"]["access_token"]
-        else:
-            return None
-    except:
-        print("TOKEN ERROR")
-        return None
+    if res.get("success"):
+        return res["result"]["access_token"]
 
+    return None
 
 # ====== TUYA STATUS ======
 def get_status():
@@ -75,6 +71,7 @@ def get_status():
         return None
 
     timestamp = str(int(time.time() * 1000))
+
     sign_str = ACCESS_ID + token + timestamp
 
     sign = hmac.new(
@@ -93,13 +90,10 @@ def get_status():
 
     url = f"{BASE_URL}/v1.0/devices/{DEVICE_ID}/status"
 
-    try:
-        res = requests.get(url, headers=headers).json()
-        print("STATUS RESPONSE:", res)
-        return res.get("result", [])
-    except:
-        print("STATUS ERROR")
-        return None
+    res = requests.get(url, headers=headers).json()
+    print("STATUS RESPONSE:", res)
+
+    return res.get("result", [])
 
 
 # ====== MONITOR ======
