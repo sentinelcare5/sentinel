@@ -8,14 +8,14 @@ import os
 from fastapi import FastAPI
 
 # ====== CONFIG ======
-ACCESS_ID = os.getenv("7pevmfxdk4scr8fktm73")
-ACCESS_KEY = os.getenv("96134c27114a48c5b919ff14b849470e")
-DEVICE_ID = os.getenv("bfd9be3339d266be8fzsva")
+ACCESS_ID = ("7pevmfxdk4scr8fktm73")
+ACCESS_KEY = ("96134c27114a48c5b919ff14b849470e")
+DEVICE_ID = ("bfd9be3339d266be8fzsva")
 
 BASE_URL = "https://openapi.tuyaeu.com"  # případně us = https://openapi.tuyaus.com
 
-TELEGRAM_TOKEN = os.getenv("8744898246:AAGClWc9KqAc7xDZhVePZhnanqvalt9Y_ps")
-CHAT_ID = os.getenv("7885300813")
+TELEGRAM_TOKEN = ("8744898246:AAGClWc9KqAc7xDZhVePZhnanqvalt9Y_ps")
+CHAT_ID = ("7885300813")
 
 MODE = "AWAY"  # HOME / AWAY
 last_alert = 0
