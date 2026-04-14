@@ -25,8 +25,6 @@ print("DEVICE_ID:", DEVICE_ID)
 TELEGRAM_TOKEN = "8744898246:AAGClWc9KqAc7xDZhVePZhnanqvalt9Y_ps"
 CHAT_ID = "7885300813"
 
-send_telegram("TEST ZPRÁVA")
-
 # ====== DATA ======
 mode = "HOME"
 movements = []
