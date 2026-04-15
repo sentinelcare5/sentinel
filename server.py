@@ -56,7 +56,7 @@ def get_token():
     method = "GET"
     url_path = "/v1.0/token?grant_type=1"
 
-    # ✅ správný string pro podpis
+    # ❗ KLÍČOVÉ: dva \n před timestamp
     sign_str = method + "\n" + url_path + "\n\n" + timestamp
 
     sign = hmac.new(
