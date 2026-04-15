@@ -49,12 +49,15 @@ def send_telegram(text):
         print("TELEGRAM ERROR")
 
 
-# ====== TUYA TOKEN ======
+# ====== TUYA TOKEN =======
 def get_token():
     timestamp = str(int(time.time() * 1000))
 
-    # ❗ MUSÍ být přesně takhle
-    sign_str = ACCESS_ID + timestamp
+    method = "GET"
+    url_path = "/v1.0/token?grant_type=1"
+
+    # ✅ správný string pro podpis
+    sign_str = method + "\n" + url_path + "\n\n" + timestamp
 
     sign = hmac.new(
         ACCESS_KEY.encode("utf-8"),
@@ -69,7 +72,7 @@ def get_token():
         "sign_method": "HMAC-SHA256"
     }
 
-    url = f"{BASE_URL}/v1.0/token?grant_type=1"
+    url = BASE_URL + url_path
 
     res = requests.get(url, headers=headers).json()
 
