@@ -22,6 +22,10 @@ if ACCESS_KEY:
 if DEVICE_ID:
     DEVICE_ID = DEVICE_ID.strip()
 
+print("ACCESS_ID:", ACCESS_ID)
+print("ACCESS_KEY:", ACCESS_KEY)
+print("DEVICE_ID:", DEVICE_ID)
+
 BASE_URL = "https://openapi.tuyaeu.com"
 
 TELEGRAM_TOKEN = ("8744898246:AAGClWc9KqAc7xDZhVePZhnanqvalt9Y_ps")
