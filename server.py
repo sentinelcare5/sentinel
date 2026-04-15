@@ -8,8 +8,8 @@ import os
 from fastapi import FastAPI
 
 # ====== CONFIG ======
-ACCESS_ID = ("7h8fj4rs5y33yhsh9j4n")
-ACCESS_KEY = ("9534ef18d8544be5b1a9c9fd76514121")
+ACCESS_ID = ACCESS_ID.strip("7h8fj4rs5y33yhsh9j4n")
+ACCESS_KEY = ACCESS_KEY.strip("9534ef18d8544be5b1a9c9fd76514121")
 DEVICE_ID = ("bfd9be3339d266be8fzsva")
 
 BASE_URL = "https://openapi.tuyaeu.com"
@@ -39,11 +39,12 @@ def send_telegram(text):
 def get_token():
     timestamp = str(int(time.time() * 1000))
 
+    # ❗ MUSÍ být přesně takhle
     sign_str = ACCESS_ID + timestamp
 
     sign = hmac.new(
-        ACCESS_KEY.encode(),
-        sign_str.encode(),
+        ACCESS_KEY.encode("utf-8"),
+        sign_str.encode("utf-8"),
         hashlib.sha256
     ).hexdigest().upper()
 
@@ -57,6 +58,8 @@ def get_token():
     url = f"{BASE_URL}/v1.0/token?grant_type=1"
 
     res = requests.get(url, headers=headers).json()
+
+    print("SIGN STRING:", sign_str)
     print("TOKEN DEBUG:", res)
 
     if res.get("success"):
