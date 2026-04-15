@@ -103,6 +103,8 @@ def get_status():
         print("STATUS ERROR:", e)
         return None
 
+print("FULL RESPONSE:", res)
+
 # ====== MONITOR ======
 def monitor():
     global last_alert
