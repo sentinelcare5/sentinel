@@ -12,7 +12,7 @@ ACCESS_ID = ("7pevmfxdk4scr8fktm73")
 ACCESS_KEY = ("96134c27114a48c5b919ff14b849470e")
 DEVICE_ID = ("bfd9be3339d266be8fzsva")
 
-BASE_URL = "https://openapi.tuyaeu.com"  # případně us = https://openapi.tuyaus.com
+BASE_URL = "https://openapi.tuyaeu.com"
 
 TELEGRAM_TOKEN = ("8744898246:AAGClWc9KqAc7xDZhVePZhnanqvalt9Y_ps")
 CHAT_ID = ("7885300813")
@@ -94,7 +94,6 @@ def get_status():
     print("STATUS RESPONSE:", res)
 
     return res.get("result", [])
-
 
 # ====== MONITOR ======
 def monitor():
