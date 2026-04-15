@@ -69,41 +69,36 @@ def get_status():
     token = get_token()
     if not token:
         return None
-
+                                
     timestamp = str(int(time.time() * 1000))
-    method = "GET"
-    url_path = f"/v1.0/devices/{DEVICE_ID}/status"
+    sign_str = ACCESS_ID + token + timestamp
 
-    body = ""
-    body_hash = hashlib.sha256(body.encode()).hexdigest()
-
-    sign_str = ACCESS_ID + token + timestamp + method + "\n" + body_hash + "\n\n" + url_path
-
-    sign = hmac.new(
+    sign = hmac.new( 
         ACCESS_KEY.encode(),
         sign_str.encode(),
         hashlib.sha256
     ).hexdigest().upper()
-
+                        
     headers = {
         "client_id": ACCESS_ID,
         "access_token": token,
         "sign": sign,
         "t": timestamp,
-        "sign_method": "HMAC-SHA256"
+        "sign_method": "HMAC-SHA256" 
     }
 
-    url = BASE_URL + url_path
-
+    url = f"{BASE_URL}/v1.0/devices/{DEVICE_ID}/status"
+                        
     try:
         res = requests.get(url, headers=headers).json()
-        print("STATUS RESPONSE:", res)
+
+        # 👇 TOTO TAM PŘIDEJ
+        print("FULL RESPONSE:", res)
+
         return res.get("result", [])
     except Exception as e:
         print("STATUS ERROR:", e)
         return None
-
-	print("FULL RESPONSE:", res)
 
 # ====== MONITOR ======
 def monitor():
