@@ -8,8 +8,8 @@ import os
 from fastapi import FastAPI
 
 # ====== CONFIG ======
-ACCESS_ID = ("7pevmfxdk4scr8fktm73")
-ACCESS_KEY = ("96134c27114a48c5b919ff14b849470e")
+ACCESS_ID = ("7h8fj4rs5y33yhsh9j4n")
+ACCESS_KEY = ("9534ef18d8544be5b1a9c9fd76514121")
 DEVICE_ID = ("bfd9be3339d266be8fzsva")
 
 BASE_URL = "https://openapi.tuyaeu.com"
