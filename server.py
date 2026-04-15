@@ -10,9 +10,9 @@ from fastapi import FastAPI
 # ====== CONFIG ======
 import os
 
-ACCESS_ID = os.getenv("7h8fj4rs5y33yhsh9j4n")
-ACCESS_KEY = os.getenv("9534ef18d8544be5b1a9c9fd76514121")
-DEVICE_ID = os.getenv("bfd9be3339d266be8fzsva")
+ACCESS_ID = ("7h8fj4rs5y33yhsh9j4n")
+ACCESS_KEY = ("9534ef18d8544be5b1a9c9fd76514121")
+DEVICE_ID = ("bfd9be3339d266be8fzsva")
 
 # bezpečné ořezání mezer
 if ACCESS_ID:
