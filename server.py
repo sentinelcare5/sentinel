@@ -83,40 +83,41 @@ def get_token():
     return None
 
 # ====== TUYA STATUS ======
-def get_status():
-    token = get_token()
-    if not token:
-        return None
-                                
-    timestamp = str(int(time.time() * 1000))
-    sign_str = ACCESS_ID + token + timestamp
+def get_status(token):
+    t = str(int(time.time() * 1000))
 
-    sign = hmac.new( 
+    path = f"/v1.0/iot-03/devices/{DEVICE_ID}/status"
+    method = "GET"
+
+    body_hash = hashlib.sha256(b"").hexdigest()
+
+    sign_str = ACCESS_ID + token + t + method + "\n" + body_hash + "\n\n" + path
+
+    print("STATUS SIGN:", sign_str)
+
+    sign = hmac.new(
         ACCESS_KEY.encode(),
         sign_str.encode(),
         hashlib.sha256
     ).hexdigest().upper()
-                        
+
     headers = {
         "client_id": ACCESS_ID,
         "access_token": token,
         "sign": sign,
-        "t": timestamp,
-        "sign_method": "HMAC-SHA256" 
+        "t": t,
+        "sign_method": "HMAC-SHA256"
     }
 
-    url = f"{BASE_URL}/v1.0/devices/{DEVICE_ID}/status"
-                        
-    try:
-        res = requests.get(url, headers=headers).json()
+    r = requests.get(BASE_URL + path, headers=headers)
+    data = r.json()
 
-        # 👇 TOTO TAM PŘIDEJ
-        print("FULL RESPONSE:", res)
+    print("FULL RESPONSE:", data)
 
-        return res.get("result", [])
-    except Exception as e:
-        print("STATUS ERROR:", e)
-        return None
+    if data["success"]:
+        return data["result"]
+
+    return []
 
 # ====== MONITOR ======
 def monitor():
