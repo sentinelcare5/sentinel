@@ -51,32 +51,34 @@ def send_telegram(text):
 
 # ====== TUYA TOKEN =======
 def get_token():
-    timestamp = str(int(time.time() * 1000))
-    url_path = "/v1.0/token?grant_type=1"
+    t = str(int(time.time() * 1000))
 
-    sign_str = ACCESS_ID + timestamp
+    method = "GET"
+    url = "/v1.0/token?grant_type=1"
+
+    sign_str = ACCESS_ID + t + method + "\n" + hashlib.sha256(b"").hexdigest() + "\n\n" + url
+
+    print("SIGN STRING:", sign_str)
 
     sign = hmac.new(
-        ACCESS_KEY.encode("utf-8"),
-        sign_str.encode("utf-8"),
+        ACCESS_KEY.encode(),
+        sign_str.encode(),
         hashlib.sha256
     ).hexdigest().upper()
 
     headers = {
         "client_id": ACCESS_ID,
         "sign": sign,
-        "t": timestamp,
+        "t": t,
         "sign_method": "HMAC-SHA256"
     }
 
-    url = BASE_URL + url_path
-    res = requests.get(url, headers=headers).json()
+    r = requests.get(BASE_URL + url, headers=headers)
+    data = r.json()
+    print("TOKEN DEBUG:", data)
 
-    print("SIGN STRING:", sign_str)
-    print("TOKEN DEBUG:", res)
-
-    if res.get("success"):
-        return res["result"]["access_token"]
+    if data["success"]:
+        return data["result"]["access_token"]
 
     return None
 
