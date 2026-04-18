@@ -123,27 +123,23 @@ def get_status(token):
 def monitor():
     global last_alert
 
-    while True:
-        try:
-            status = get_status()
+while True:
+    try:
+        token = get_token()
 
-            if status:
-                for item in status:
-                    if item["code"] == "pir":
-                        print("PIR:", item["value"])
+        if token:
+            status = get_status(token)
 
-                        if MODE == "AWAY" and item["value"] == "pir":
-                            if time.time() - last_alert > 30:
-                                print("🚨 POHYB DETEKOVÁN")
-                                send_telegram("🚨 POHYB DETEKOVÁN!")
-                                last_alert = time.time()
+            for item in status:
+                if item["code"] == "pir" and item["value"] == "presence":
+                    print("MOTION DETECTED")
+                    send_telegram("🚨 Pohyb detekován!")
 
-            time.sleep(5)
+        time.sleep(5)
 
-        except Exception as e:
-            print("Monitor error:", e)
-            time.sleep(5)
-
+    except Exception as e:
+        print("Monitor error:", e)
+        time.sleep(5)
 
 # ====== API ======
 @app.get("/")
