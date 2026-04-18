@@ -52,16 +52,13 @@ def send_telegram(text):
 # ====== TUYA TOKEN =======
 def get_token():
     timestamp = str(int(time.time() * 1000))
-    method = "GET"
     url_path = "/v1.0/token?grant_type=1"
 
-    string_to_sign = method + "\n\n\n" + url_path
-
-    sign_str = ACCESS_ID + timestamp + string_to_sign
+    sign_str = ACCESS_ID + timestamp
 
     sign = hmac.new(
-        ACCESS_KEY.encode(),
-        sign_str.encode(),
+        ACCESS_KEY.encode("utf-8"),
+        sign_str.encode("utf-8"),
         hashlib.sha256
     ).hexdigest().upper()
 
